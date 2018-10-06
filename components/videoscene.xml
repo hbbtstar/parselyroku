@@ -25,6 +25,7 @@
   <children >
  
     <Video id = "exampleVideo"/>
+    <ParselyTask id="ParselyTask" />
  
   </children>
  

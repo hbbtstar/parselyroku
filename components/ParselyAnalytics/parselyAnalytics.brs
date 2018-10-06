@@ -24,6 +24,7 @@ Function initParsely(apikey As String) As Void
   parselyTracker.debug = false
 
   'set global attributes
+  parselyTracker.video = CreateObject("RoSGNode", "Video")
   m.parselyTracker = parselyTracker
 End Function
 
