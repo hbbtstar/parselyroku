@@ -13,10 +13,6 @@ Function execParselyLoop() As Void
   port = CreateObject("roMessagePort")
   m.top.observeField("videoStart", port)
   m.top.observeField("heartbeat", port)
-  if m.top.automatic = true then
-    m.videoNode = m.top.getParent()
-    m.videoNode.observeField("control", "parselyVideoPlay")
-  end if
     
   
   apikey = "insert_your_domain_name_here.com" ' apikey for this channel
@@ -28,6 +24,8 @@ Function execParselyLoop() As Void
     enableParsely(true)
   end if
   ' Enable or disable debug here for viewing events on the console
+  m.videoNode = m.parselyTracker.video
+  m.videoNode.observeField("control", "parselyVideoPlay")
   setParselyDebug(true)
   ' Apps which use this long-lived task should delay any writes to the reporting fields (pageView, etc.)
   ' until this is set to true.  This is because there is a non-zero time from setting control = "RUN"
