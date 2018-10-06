@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ParselyTask" extends="Group" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+
+	<script type="text/brightscript" uri="pkg:/components/ParselyAnalytics/parselyAnalytics.brs" />
+	<script type="text/brightscript" >
+<![CDATA[
+ 
+Function init()
+  m.top.functionName = "execParselyLoop"
+end Function
+
+Function execParselyLoop() As Void
+  port = CreateObject("roMessagePort")
+  m.top.observeField("videoStart", port)
+  m.top.observeField("heartbeat", port)
+  if m.top.automatic = true then
+    m.videoNode = m.top.getParent()
+    m.videoNode.observeField("control", "parselyVideoPlay")
+  end if
+    
+  
+  apikey = "insert_your_domain_name_here.com" ' apikey for this channel
+  enable_tracking = NOT device.IsAdIdTrackingDisabled() 'setting in Roku menu to limit tracking
+  ' Init analytics
+  initParsely(apikey)
+  if enable_tracking then
+    print "Enabling tracking analytics"
+    enableParsely(true)
+  end if
+  ' Enable or disable debug here for viewing events on the console
+  setParselyDebug(true)
+  ' Apps which use this long-lived task should delay any writes to the reporting fields (pageView, etc.)
+  ' until this is set to true.  This is because there is a non-zero time from setting control = "RUN"
+  ' until the time when the reporting fields are being observed.
+  m.top.ready = true
+  while true
+    msg = wait(0, port)
+    if type(msg) = "roSGNodeEvent" then
+      field = msg.getField()
+      data = msg.getData()
+      if field = "videoStart" then
+        parselyTrackVideoStart(data.metadata)
+      end if
+      if field = "heartbeat" then
+        parselyTrackVideoHeartbeat(data.metadata, data.inc)
+      end if
+    end if  
+  end while  
+End Function
+
+Function parselyVideoPlay() As Void
+  if m.videoNode.control = "play" then    
+    parselyMetadata = parselyGetMetadata()
+    parselyTrackVideoStart(parselyMetadata)
+  end if
+End Function
+
+
+    
+Function parselyGetMetadata() As Object
+  if m.videoNode.contentIsPlaylist = false metadataNode = m.videoNode.content else metadataNode= m.videoNode.content[m.videoNode.contentIndex]
+  tmsp = CreateObject("roDateTime").AsSeconds() * 1000
+  if metadataNode.contentID = invalid then
+    
+  
+  parselyMetadata = {
+    title: metadataNode.Title,
+    section: metadataNode.ContentType,
+    image_url: metadataNode.SDPosterUrl,
+    link: metadataNode.contentID,
+    duration: metadataNode.Length,
+    pub_date_tmsp: tmsp
+  }
+  end if
+    
+  return parselyMetadata
+End Function
+  
+ 
+]]>
+</script>
+ 
+  <interface>
+    <!-- 
+     - Set to true once the execParselyLoop function is up and observing the reporting fields
+     -->
+    <field id="ready" type="boolean" value="false"/>
+
+    <!--
+      -
+      - videoStart should contain:
+      -   {
+      -     hostname: <optional>
+      -     page: <optional>
+      -     title:  <optional>
+      -   }
+      -
+      -->
+    <field id="videoStart" type="assocarray"/>
+    <field id="heartbeat" type="assocarray"/>
+    <field id="automatic" type="boolean" value="true" />
+    <!--   <children>
+   <Timer 
+        id="HeartbeatTimer"
+        repeat="true"
+        duration=10
+        </Timer>
+    </children>      -->
+    
+    
+		
+   
+  </interface>
+</component>

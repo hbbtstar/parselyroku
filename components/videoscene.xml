@@ -1,0 +1,31 @@
+<component name = "VideoExample" extends = "Scene" >
+ 
+  <script type = "text/brightscript" >
+ 
+    <![CDATA[
+ 
+    sub init()
+      videocontent = createObject("RoSGNode", "ContentNode")
+ 
+      videocontent.title = "Example Video"
+      videocontent.streamformat = "mp4"
+      videocontent.url = "http://video.ted.com/talks/podcast/CraigVenter_2008_480.mp4"
+ 
+      video = m.top.findNode("exampleVideo")
+      video.content = videocontent
+ 
+      video.setFocus(true)
+      video.control = "play"
+    end sub
+ 
+    ]]>
+ 
+  </script>
+ 
+  <children >
+ 
+    <Video id = "exampleVideo"/>
+ 
+  </children>
+ 
+</component>
