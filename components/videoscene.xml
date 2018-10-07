@@ -31,7 +31,7 @@
  
   <children>
  
-    <ParselyTask id="parselyTask" videoNodeId="exampleVideo" />
+    <ParselyTask id="parselyTask" videoNodeId="exampleVideo" apikey="elevatedtoday.com"/>
     <Video id = "exampleVideo"/>
  
   </children>

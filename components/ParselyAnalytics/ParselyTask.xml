@@ -15,9 +15,10 @@ Function execParselyLoop() as Void
   port = CreateObject("roMessagePort")
   m.top.observeField("videoStart", port)
   m.top.observeField("heartbeat", port)
+  
     
   
-  apikey = "elevatedtoday.com" ' apikey for this channel
+  apikey = m.top.apikey
   ' Init analytics
   initParsely(apikey)
   print "Enabling tracking analytics"
@@ -35,18 +36,15 @@ Function execParselyLoop() as Void
   ' until this is set to true.  This is because there is a non-zero time from setting control = "RUN"
   ' until the time when the reporting fields are being observed.
   m.top.ready = true
+  elapsedSeconds = 0
   while true
-    msg = wait(0, port)
-    if type(msg) = "roSGNodeEvent" then
-      field = msg.getField()
-      data = msg.getData()
-      if field = "videoStart" then
-        parselyTrackVideoStart(data.metadata)
-      end if
-      if field = "heartbeat" then
-        parselyTrackVideoHeartbeat(data.metadata, data.inc)
-      end if
-    end if  
+    sleep(1000)
+    elapsedSeconds = elapsedSeconds + 1
+    print elapsedSeconds
+    if elapsedSeconds = 10 then
+      parselyVideoHeartbeat()
+      elapsedSeconds = 0
+    end if
   end while  
 End Function
 
@@ -57,7 +55,13 @@ Function parselyVideoPlay() As Void
   end if
 End Function
 
-
+Function parselyVideoHeartbeat() as Void
+  print m.videoNode.state
+  if m.videoNode.state = "playing" then
+    parselyMetadata = parselyGetMetadata()
+    parselyTrackVideoHeartbeat(parselyMetadata, 10)
+  end if
+End Function
     
 Function parselyGetMetadata() As Object
   if m.videoNode.contentIsPlaylist = false metadataNode = m.videoNode.content else metadataNode= m.videoNode.content[m.videoNode.contentIndex]
@@ -101,15 +105,9 @@ End Function
     <field id="videoStart" type="assocarray"/>
     <field id="heartbeat" type="assocarray"/>
     <field id="videoNodeId" type="string" />
+    <field id="apikey" type="string" />
     <field id="automatic" type="boolean" value="true" />
-    <!--   <children>
-   <Timer 
-        id="HeartbeatTimer"
-        repeat="true"
-        duration=10
-        </Timer>
-    </children>      -->
-    
+   
     
 		
    

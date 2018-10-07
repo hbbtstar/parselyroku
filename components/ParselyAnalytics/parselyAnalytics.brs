@@ -52,11 +52,9 @@ Function parselyTrackAction(action As String, metadata={} as Object, inc=0 as In
   metadata.video_platform = "roku"
   if m.parselyTracker.debug
     ? "[Parsely] Action: " + action
-    ? "[Parsely] APIKey: " + parselyTracker.apikey
-    ? "[Parsely] video id: " + video_id
-    ? "[Parsely] title" + title
-    ? "[Parsely] author: " + author
-    ? "[Parsely] section: " + section
+    ? "[Parsely] APIKey: " + m.parselyTracker.apikey
+    ? "[Parsely] video id: " + Str(metadata.link)
+    ? "[Parsely] title" + metadata.title
   end if 
   
   ' Roku has no concept of URL, so just make some url that will make it through the pipeline: okay if it has no metadata
@@ -74,7 +72,7 @@ Function parselyTrackAction(action As String, metadata={} as Object, inc=0 as In
     
   }
   if inc > 0
-    pixel_params.inc = inc
+    pixel_params.inc = inc.ToStr()
   end if
   parselyTrackPixel(pixel_params)
 End Function
@@ -117,7 +115,7 @@ Function parselyTrackPixel(hit_params As Object) As Void
     reqString = reqString.Trim()
     print reqString
     request.SetUrl(reqString)
-    didSend = request.GetToString()
+    didSend = request.AsyncGetToString()
     requestId = request.GetIdentity().ToStr()
     m.parselyTracker.asyncReqById[requestId] = request
     print "[Parsely] request initiated ("+requestId+")";reqString
