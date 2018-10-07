@@ -12,20 +12,27 @@
       videocontent.url = "http://video.ted.com/talks/podcast/CraigVenter_2008_480.mp4"
  
       video = m.top.findNode("exampleVideo")
+      parselyTask = m.top.findNode("parselyTask")
+      parselyTask.control = "RUN"
+      print m.parselyTracker
       video.content = videocontent
+
  
       video.setFocus(true)
       video.control = "play"
+      
     end sub
+    
+    
  
     ]]>
  
   </script>
  
-  <children >
+  <children>
  
+    <ParselyTask id="parselyTask" videoNodeId="exampleVideo" />
     <Video id = "exampleVideo"/>
-    <ParselyTask id="ParselyTask" />
  
   </children>
  

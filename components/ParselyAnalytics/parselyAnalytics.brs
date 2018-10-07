@@ -14,8 +14,10 @@ Function initParsely(apikey As String) As Void
   ' get some things Parsely will need
   parselyTracker.data.parsely_site_uuid = device.GetRIDA()
   screenSize = device.GetDisplaySize()
-  parselyTracker.screenSize = screenSize["w"] + screenSize["h"] + "|" + screenSize["w"] + screenSize["h"] + "|" + "32"  
-
+  widthString = Str(screenSize["w"]).Trim()
+  heightString = Str(screenSize["h"]).Trim()
+  parselyTracker.screenSize = widthString + "x" +  heightString + "|" + widthString + "x" + heightString + "|" + "32"  
+  parselyTracker.screenSize = parselyTracker.screenSize.Trim()
   ' single point of on/off for analytics
   parselyTracker.enable = false
   parselyTracker.asyncReqById = {}    ' Since we async HTTP metric requests, hold onto objects so they don't go out of scope (and get killed)
@@ -26,6 +28,7 @@ Function initParsely(apikey As String) As Void
   'set global attributes
   parselyTracker.video = CreateObject("RoSGNode", "Video")
   m.parselyTracker = parselyTracker
+
 End Function
 
 Function enableParsely(enable As Boolean) As Void
@@ -43,9 +46,9 @@ End Function
 Function parselyTrackAction(action As String, metadata={} as Object, inc=0 as Integer) As Void
   if metadata.title = invalid then metadata.title = ""
   if metadata.section = invalid then metadata.section = "Uncategorized"
-  if metadata.author = invalid then metadata.authors = Box(m.parselyTracker.apikey).Escape()
+  if metadata.author = invalid then metadata.authors = m.parselyTracker.apikey
   if metadata.tags = invalid then metadata.tags = {}
-  if metadata.image_url = invalid then metadata.image_url = "" else metadata.image_url = Box(metadata.image_url).Escape()
+  if metadata.image_url = invalid then metadata.image_url = "" else metadata.image_url = metadata.image_url
   metadata.video_platform = "roku"
   if m.parselyTracker.debug
     ? "[Parsely] Action: " + action
@@ -61,19 +64,19 @@ Function parselyTrackAction(action As String, metadata={} as Object, inc=0 as In
   date = CreateObject("roDateTime")
   pixel_params = {
     action: action,
-    idsite: Box(m.parselyTracker.apikey).Escape(),
-    url: Box(pageUrl).Escape(),
+    idsite: m.parselyTracker.apikey,
+    url: Box(pageUrl),
     urlref: "",
     data: m.parselyTracker.data,
     screen: m.parselyTracker.screenSize,
-    date: Box(date.ToISOString()).Escape(),
+    date: date.ToISOString(),
     metadata: metadata
     
   }
   if inc > 0
     pixel_params.inc = inc
   end if
-  parselySendPixel(pixel_params)
+  parselyTrackPixel(pixel_params)
 End Function
 
 Function parselyTrackVideoStart(metadata={} as Object) As Void
@@ -93,22 +96,32 @@ Function parselyTrackPixel(hit_params As Object) As Void
   endif
 
   baseUrl = m.parselyTracker.baseUrl
+  full_params = "?" + "data" + "=" + FormatJSON(hit_params.data).encodeURIComponent()
+  if hit_params.metadata <> invalid then
+      full_params = full_params + "&" + "metadata" + "=" + FormatJSON(hit_params.metadata).encodeURIComponent()
+  end if
 
   for each param in hit_params
-    full_params = full_params + "&" + param + "=" + hit_params[param]
+    if param <> "metadata" and param <> "data" then
+    full_params = full_params + "&" + param + "=" + hit_params[param].encodeURIComponent()
+    end if
   end for
-
+    full_params = full_params
+      
     'New xfer obj needs to be made each request and ref held on to per https://sdkdocs.roku.com/display/sdkdoc/ifUrlTransfer
     request = CreateObject("roURLTransfer")
     request.SetMessagePort(m.parselyTracker.asyncMsgPort)
-
-    reqString = baseUrl + "?" + full_params
-    request.SetUrl(reqString)
-
     
-    didSend = request.AsyncToFromString()
+
+    reqString = baseUrl + full_params
+    reqString = reqString.Trim()
+    print reqString
+    request.SetUrl(reqString)
+    didSend = request.GetToString()
     requestId = request.GetIdentity().ToStr()
     m.parselyTracker.asyncReqById[requestId] = request
+    print "[Parsely] request initiated ("+requestId+")";reqString
+    print "[Parsely] pending req";getParselyPendingRequestsMap()
 
     if m.parselyTracker.debug
       ? "[Parsely] request initiated ("+requestId+")";reqString
